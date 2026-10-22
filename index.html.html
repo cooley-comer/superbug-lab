@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Superbug Lab: From One Cell to an Army</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E🧫%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#f4f7fb;--card:#ffffff;--ink:#0b1b33;--muted:#5b6b7f;--line:#d3dce8;--navy:#0f2a52;--accent:#a8321a;--teal:#1c8fa8;
+  --blue:#2f6fd1;--yellow:#e0a800;--red:#d63a2f;--ok:#1f8a4c;--bad:#c0392b;--tint:#edf2f8;--on-accent:#ffffff;--dish:#f5ecd2;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1627;--card:#14223a;--ink:#e8eef8;--muted:#9fb0c7;--line:#2a3b58;--navy:#8fb4ee;--accent:#ff8a6b;--teal:#4cc3dd;
+  --blue:#6b9cf0;--yellow:#f2c230;--red:#ff6a5e;--ok:#4cc884;--bad:#ff7a6c;--tint:#1b2c49;--on-accent:#0b1b33;--dish:#2b3550;}}
+:root[data-theme="dark"]{
+  --bg:#0c1627;--card:#14223a;--ink:#e8eef8;--muted:#9fb0c7;--line:#2a3b58;--navy:#8fb4ee;--accent:#ff8a6b;--teal:#4cc3dd;
+  --blue:#6b9cf0;--yellow:#f2c230;--red:#ff6a5e;--ok:#4cc884;--bad:#ff7a6c;--tint:#1b2c49;--on-accent:#0b1b33;--dish:#2b3550;}
+*{box-sizing:border-box}
+html{scroll-padding-top:70px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;color:var(--navy);line-height:1.2;margin:0 0 .4em}
+h1{font-size:2rem}h2{font-size:1.45rem}h3{font-size:1.1rem;margin-top:1.1rem}
+header.top{position:sticky;top:0;z-index:5;background:#0f2a52;color:#fff;padding:.5rem 1rem;display:flex;gap:.75rem;align-items:center;justify-content:space-between;flex-wrap:wrap}
+header.top .brand{font-weight:700}
+.tabs{display:flex;gap:.4rem;flex-wrap:wrap}
+.tabs a{color:#fff;text-decoration:none;font-size:.9rem;padding:.25rem .65rem;border-radius:999px;background:rgba(255,255,255,.14)}
+.lang button{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:999px;padding:.25rem .8rem;cursor:pointer;font-size:.9rem}
+.lang button[aria-pressed="true"]{background:#fff;color:#0f2a52;font-weight:700}
+main{max-width:920px;margin:0 auto;padding:1rem 1rem 4rem}
+.hero{background:linear-gradient(135deg,#0f2a52,#1c5a8f);color:#fff;border-radius:18px;padding:1.5rem 1.4rem;margin:1rem 0}
+.hero h1{color:#fff;margin-bottom:.3rem}
+.hero p{margin:.3rem 0;color:#dbe6f5}
+.disks{display:flex;gap:.4rem;margin-bottom:.6rem}.disks i{width:22px;height:22px;border-radius:50%;display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1.1rem 1.2rem;margin:1rem 0}
+.pill{display:inline-block;background:var(--accent);color:var(--on-accent);border-radius:999px;padding:.1rem .7rem;font-size:.8rem;font-weight:700;margin-left:.4rem;vertical-align:middle;white-space:nowrap}
+.partno{font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--teal)}
+.info{background:var(--tint);border-radius:12px;padding:.7rem .9rem;margin:.6rem 0}
+label.q{display:block;font-weight:600;margin:.9rem 0 .3rem}
+textarea,input[type=text],select{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.5rem .6rem}
+textarea{min-height:90px;resize:vertical}
+button.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:.55rem 1rem;cursor:pointer;background:var(--navy);color:var(--card)}
+button.btn.alt{background:var(--tint);color:var(--ink);border:1px solid var(--line)}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{border:1px solid var(--line);padding:.35rem .5rem;text-align:center}
+th{background:var(--tint)}
+.scroll{overflow-x:auto}
+.plates{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin-top:.6rem}
+.plate{text-align:center;font-size:.85rem}
+.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
+.dots{display:flex;flex-wrap:wrap;gap:3px;min-height:26px;margin:.3rem 0}
+.dots i{width:14px;height:14px;border-radius:50%;display:block}
+.simrow{display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-start}
+.simrow>div{flex:1 1 300px}
+.dice{font-size:3rem;line-height:1;margin:0 .5rem}
+.log{background:var(--tint);border-radius:10px;padding:.6rem .8rem;min-height:3.2rem;margin:.6rem 0;font-size:.95rem}
+.legend{display:flex;gap:.8rem;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:.3rem;vertical-align:-1px;background:var(--c)}
+.mc label{display:block;padding:.4rem .6rem;border:1px solid var(--line);border-radius:10px;margin:.3rem 0;cursor:pointer}
+.mc label.right{border-color:var(--ok);background:rgba(31,138,76,.12)}
+.mc label.wrong{border-color:var(--bad);background:rgba(192,57,43,.12)}
+.score{position:sticky;bottom:0;background:var(--card);border-top:2px solid var(--navy);padding:.6rem 1rem;display:flex;gap:1rem;justify-content:space-between;align-items:center;flex-wrap:wrap;z-index:4;padding-bottom:calc(.6rem + env(safe-area-inset-bottom,0px))}
+.small{font-size:.85rem;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+@media (max-width:560px){.row2{grid-template-columns:1fr}h1{font-size:1.6rem}}
+@media print{header.top,.score,button{display:none!important}.card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header class="top">
+  <span class="brand" id="brand"></span>
+  <nav class="tabs" id="nav"></nav>
+  <div class="lang"><button id="lEN" aria-pressed="true">English</button> <button id="lES" aria-pressed="false">Español</button></div>
+</header>
+<main id="app"></main>
+<div class="score" id="scorebar"></div>
+
+<script>
+"use strict";
+/* ---------------- storage (private to this viewer, may be empty) ---------------- */
+var KEY="superbug_lab_v1";
+function loadState(){try{var s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
+function saveState(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+var S=loadState()||{lang:"en",name:"",period:"",pred:{},predChecked:false,mated:false,q:{},mc:{},sim:null,runs:[],mode:"random"};
+S.pred=S.pred||{};S.q=S.q||{};S.mc=S.mc||{};S.runs=S.runs||[];S.mcChecked=S.mcChecked||{};S.match=S.match||{};S.sc=S.sc||{};S.scChecked=S.scChecked||{};
+
+/* ---------------- text ---------------- */
+var TXT={
+en:{
+brand:"Superbug Lab",nav:["Part 1: Gene transfer","Part 2: Simulation","Part 3: Check","Part 4: Put it together","Part 5: How it happens","Part 6: Be smart"],
+title:"Superbug Lab: From One Cell to an Army",
+sub:"PLTW Medical Interventions · Activities 1.2.3 and 1.2.4",
+intro:"One resistant bacterium can become an “army of superbugs.” In Part 1 you will look at how resistance genes can move between bacteria. In Part 2 you will model what happens inside a patient who skips antibiotic doses. Then you will connect both ideas.",
+name:"Name",period:"Class period",
+pts:"pts",
+p1h:"Part 1: Gene transfer on the plates",p1pts:"8 + 7 pts",
+p1intro:"In Activity 1.2.3 you worked with two strains of E. coli. E. coli I is resistant to streptomycin (the gene is on its chromosome). E. coli II is resistant to ampicillin (the gene is on a plasmid). Predict which sections grow on each plate.",
+colI:"E. coli I (strep-resistant)",colII:"E. coli II (amp-resistant)",
+plates:["LB agar (no antibiotic)","LB + streptomycin","LB + ampicillin","LB + streptomycin + ampicillin"],
+sel:["Choose…","Growth","No growth"],
+check:"Check my predictions",pcore:"Predictions correct",
+reveal:"Run the mating plate test",
+matedH:"After mating",matedP:"You mixed one colony of each strain on a mating plate, then streaked the mixture onto three plates. Here is what grew:",
+matedNote:"Cells grew on the plate with BOTH antibiotics. Neither original strain could do that.",
+qA:"Question 1 (4 pts)",qAt:"Compare your predictions with the results. Why did neither original strain grow on the streptomycin + ampicillin plate, and what does the growth on that plate after mating show?",
+qB:"Question 2 (3 pts)",qBt:"Which gene was transferred, from which strain to which strain, and by what process (conjugation, transformation, or transduction)?",
+p2h:"Part 2: Antibiotic simulation",p2pts:"5 + 9 pts",
+p2intro:"You have pneumonia and take an antibiotic for 8 days. Each disk stands for thousands of bacteria: blue = least resistant, yellow = resistant, red = extremely resistant. You start with 13 blue, 6 yellow, and 1 red.",
+rules:["Roll the number cube. 1, 3, 5, 6 = you took your dose: remove 5 disks (blue first, then yellow, then red). 2, 4 = you forgot: remove none.","Reproduce: for every color that still has at least one disk, add 1 disk of that color.","Record the counts. Stop after 8 rolls or when all bacteria are dead."],
+mode1:"Roll for my dose (random)",mode2:"Perfect patient (take every dose)",
+roll:"Roll the number cube",newrun:"Save this run and start a new one",reset:"Start over",
+taken:"dose taken",forgot:"dose forgotten",
+removed:"removed",added:"added",
+tossN:"Toss",blue:"Blue",yellow:"Yellow",red:"Red",total:"Total",initial:"Initial",
+graphT:"Bacteria in your body",gx:"Toss number",gy:"Number of disks",
+runDone:"This run is finished.",
+runs:"Saved runs",runMode:["Random doses","Perfect patient"],runEnd:"End counts (blue / yellow / red / total)",
+simpts:"Simulation completed (auto-scored)",
+qC:"Question 3 (5 pts)",qCt:"Compare your random run with your perfect-patient run. Which colors were left at the end of each, and what do your numbers show about missed doses?",
+qD:"Question 4 (4 pts)",qDt:"Sue Smith feels better after three days and wants to stop her antibiotic. Explain why she should finish the full course.",
+p3h:"Part 3: Quick check",p3pts:"3 pts",
+mcs:[
+ {q:"How did the E. coli I cells gain ampicillin resistance on the mating plate?",o:["A mutation made them resistant","A plasmid was passed to them by conjugation","They were already resistant to ampicillin","The antibiotic changed their DNA"],a:1},
+ {q:"In the simulation, why did the red disks keep reproducing?",o:["The antibiotic turns blue disks red","Red bacteria survive the antibiotic best, so they are the last removed","The teacher adds red disks","Red disks only grow if doses are missed"],a:1},
+ {q:"Which statement best describes antibiotic resistance?",o:["The patient’s body gets used to the medicine","Bacteria survive an antibiotic that normally kills them","The antibiotic gets old and stops working","Bacteria become larger"],a:1}],
+p4h:"Part 4: Put it together",p4pts:"8 pts",
+qE:"Question 5 (8 pts)",qEt:"Explain how one resistant bacterial cell can become an “army of superbugs.” Use evidence from BOTH the plate experiment (Part 1) and the simulation (Part 2), and name at least one other cause of antibiotic resistance.",
+p5h:"Part 5: How resistance happens and spreads",p5pts:"6 pts",
+p5intro:"Match each term to what it means. The first group is about how bacteria become resistant. The second group is about how resistance genes move between bacteria (you saw one of these in Part 1).",
+g1:"How bacteria become resistant",g2:"How resistance genes transfer",
+mterms:["Mutation","Destruction (inactivation) of the antibiotic","Efflux","Conjugation","Transformation","Transduction"],
+mdefs:["A change in the bacterium’s own DNA makes it resistant.","An enzyme breaks down or disables the antibiotic.","The cell pumps the antibiotic back out before it can work.","DNA, such as a plasmid, passes directly from one bacterium to another through contact.","A bacterium takes up free DNA from its surroundings.","A virus that infects bacteria carries DNA from one bacterium to another."],
+checkM:"Check my matches",mcorrect:"Matches correct",
+p6h:"Part 6: Be a smart patient",p6pts:"4 + 4 pts",
+p6intro:"Decide whether each choice is smart or risky for stopping superbugs. You will see why right away.",
+smart:"Smart choice",risky:"Risky choice",
+scs:[
+ {q:"Maya feels much better on day 3 of her 8-day antibiotic, so she stops taking it.",a:1,f:"Risky. The bacteria that remain are the most resistant ones. They can multiply, like the red disks, and spread."},
+ {q:"Luis has a cold and asks the doctor for an antibiotic “just in case.”",a:1,f:"Risky. Colds are caused by viruses, and antibiotics do not work on viruses. Unneeded antibiotics give bacteria more chances to become resistant."},
+ {q:"Priya takes every dose of her antibiotic at the same time each day until the bottle is empty.",a:0,f:"Smart. Taking every dose on time kills the bacteria before resistant survivors can take over."},
+ {q:"Sam washes his hands often and stays home when sick, so fewer people get infections.",a:0,f:"Smart. Fewer infections means fewer antibiotics are needed, so bacteria have fewer chances to become resistant."}],
+qF:"Question 6 (4 pts)",qFt:"Write 3–4 sentences of advice to a classmate about using antibiotics responsibly. Use at least two words from this lab (for example: resistance, survivors, plasmid, conjugation).",
+earned:"Auto-scored so far",ofAuto:"of 26 auto-scored pts",teacher:"Your teacher scores Questions 1–6 (28 pts). Total assignment: 54 pts.",
+dl:"Download my answers",copy:"Copy my answers",copied:"Copied!",dlfail:"Could not save. Use “Copy my answers” instead.",
+saved:"Your work saves on this device as you type.",
+resetAll:"Clear everything",confirmClear:"Clear all of your answers on this page?",
+mix:"Mating plate results",
+growth:"Growth",nog:"No growth",
+type:"Type your answer here"
+},
+es:{
+brand:"Laboratorio de Superbacterias",nav:["Parte 1: Transferencia de genes","Parte 2: Simulación","Parte 3: Repaso","Parte 4: Conecta todo","Parte 5: Cómo ocurre","Parte 6: Sé inteligente"],
+title:"Laboratorio de Superbacterias: de una célula a un ejército",
+sub:"PLTW Intervenciones Médicas · Actividades 1.2.3 y 1.2.4",
+intro:"Una sola bacteria resistente puede convertirse en un “ejército de superbacterias”. En la Parte 1 verás cómo los genes de resistencia pueden pasar entre bacterias. En la Parte 2 modelarás lo que pasa dentro de un paciente que se salta dosis de antibiótico. Luego conectarás ambas ideas.",
+name:"Nombre",period:"Período de clase",
+pts:"pts",
+p1h:"Parte 1: Transferencia de genes en las placas",p1pts:"8 + 7 pts",
+p1intro:"En la Actividad 1.2.3 trabajaste con dos cepas de E. coli. E. coli I es resistente a la estreptomicina (el gen está en su cromosoma). E. coli II es resistente a la ampicilina (el gen está en un plásmido). Predice qué secciones crecen en cada placa.",
+colI:"E. coli I (resistente a estrep.)",colII:"E. coli II (resistente a amp.)",
+plates:["Agar LB (sin antibiótico)","LB + estreptomicina","LB + ampicilina","LB + estreptomicina + ampicilina"],
+sel:["Elige…","Crecimiento","Sin crecimiento"],
+check:"Revisar mis predicciones",pcore:"Predicciones correctas",
+reveal:"Hacer la prueba de la placa de apareamiento",
+matedH:"Después del apareamiento",matedP:"Mezclaste una colonia de cada cepa en una placa de apareamiento y luego sembraste la mezcla en tres placas. Esto fue lo que creció:",
+matedNote:"Crecieron células en la placa con AMBOS antibióticos. Ninguna de las cepas originales pudo hacerlo.",
+qA:"Pregunta 1 (4 pts)",qAt:"Compara tus predicciones con los resultados. ¿Por qué ninguna de las cepas originales creció en la placa con estreptomicina + ampicilina, y qué muestra el crecimiento en esa placa después del apareamiento?",
+qB:"Pregunta 2 (3 pts)",qBt:"¿Qué gen se transfirió, de qué cepa a qué cepa, y por qué proceso (conjugación, transformación o transducción)?",
+p2h:"Parte 2: Simulación de antibióticos",p2pts:"5 + 9 pts",
+p2intro:"Tienes neumonía y tomas un antibiótico durante 8 días. Cada disco representa miles de bacterias: azul = menos resistentes, amarillo = resistentes, rojo = extremadamente resistentes. Empiezas con 13 azules, 6 amarillos y 1 rojo.",
+rules:["Lanza el dado. 1, 3, 5, 6 = tomaste tu dosis: quita 5 discos (primero azules, luego amarillos, luego rojos). 2, 4 = la olvidaste: no quites ninguno.","Reproducción: por cada color que todavía tenga al menos un disco, agrega 1 disco de ese color.","Anota los conteos. Detente después de 8 lanzamientos o cuando todas las bacterias mueran."],
+mode1:"Lanzar para mi dosis (al azar)",mode2:"Paciente perfecto (tomo todas las dosis)",
+roll:"Lanzar el dado",newrun:"Guardar esta corrida y empezar otra",reset:"Empezar de nuevo",
+taken:"dosis tomada",forgot:"dosis olvidada",
+removed:"quitados",added:"agregados",
+tossN:"Lanzamiento",blue:"Azul",yellow:"Amarillo",red:"Rojo",total:"Total",initial:"Inicial",
+graphT:"Bacterias en tu cuerpo",gx:"Número de lanzamiento",gy:"Número de discos",
+runDone:"Esta corrida terminó.",
+runs:"Corridas guardadas",runMode:["Dosis al azar","Paciente perfecto"],runEnd:"Conteos finales (azul / amarillo / rojo / total)",
+simpts:"Simulación completada (puntuación automática)",
+qC:"Pregunta 3 (5 pts)",qCt:"Compara tu corrida al azar con la del paciente perfecto. ¿Qué colores quedaron al final en cada una y qué muestran tus números sobre las dosis olvidadas?",
+qD:"Pregunta 4 (4 pts)",qDt:"Sue Smith se siente mejor después de tres días y quiere dejar su antibiótico. Explica por qué debe terminar todo el tratamiento.",
+p3h:"Parte 3: Repaso rápido",p3pts:"3 pts",
+mcs:[
+ {q:"¿Cómo ganaron resistencia a la ampicilina las células de E. coli I en la placa de apareamiento?",o:["Una mutación las hizo resistentes","Les pasaron un plásmido por conjugación","Ya eran resistentes a la ampicilina","El antibiótico cambió su ADN"],a:1},
+ {q:"En la simulación, ¿por qué los discos rojos siguieron reproduciéndose?",o:["El antibiótico convierte los discos azules en rojos","Las bacterias rojas sobreviven mejor al antibiótico, así que son las últimas en quitarse","El maestro agrega discos rojos","Los discos rojos solo crecen si se olvidan dosis"],a:1},
+ {q:"¿Qué enunciado describe mejor la resistencia a los antibióticos?",o:["El cuerpo del paciente se acostumbra al medicamento","Las bacterias sobreviven a un antibiótico que normalmente las mata","El antibiótico envejece y deja de funcionar","Las bacterias se hacen más grandes"],a:1}],
+p4h:"Parte 4: Conecta todo",p4pts:"8 pts",
+qE:"Pregunta 5 (8 pts)",qEt:"Explica cómo una sola célula bacteriana resistente puede convertirse en un “ejército de superbacterias”. Usa evidencia de AMBAS partes: el experimento de las placas (Parte 1) y la simulación (Parte 2), y nombra al menos otra causa de la resistencia a los antibióticos.",
+p5h:"Parte 5: Cómo ocurre y se propaga la resistencia",p5pts:"6 pts",
+p5intro:"Relaciona cada término con su significado. El primer grupo trata de cómo las bacterias se vuelven resistentes. El segundo grupo trata de cómo los genes de resistencia pasan entre bacterias (viste uno de estos en la Parte 1).",
+g1:"Cómo se vuelven resistentes las bacterias",g2:"Cómo se transfieren los genes de resistencia",
+mterms:["Mutación","Destrucción (inactivación) del antibiótico","Eflujo","Conjugación","Transformación","Transducción"],
+mdefs:["Un cambio en el propio ADN de la bacteria la hace resistente.","Una enzima descompone o desactiva el antibiótico.","La célula expulsa el antibiótico antes de que pueda actuar.","El ADN, como un plásmido, pasa directamente de una bacteria a otra por contacto.","Una bacteria toma ADN libre de su entorno.","Un virus que infecta bacterias lleva ADN de una bacteria a otra."],
+checkM:"Revisar mis respuestas",mcorrect:"Respuestas correctas",
+p6h:"Parte 6: Sé un paciente inteligente",p6pts:"4 + 4 pts",
+p6intro:"Decide si cada decisión es inteligente o arriesgada para detener a las superbacterias. Verás el porqué enseguida.",
+smart:"Decisión inteligente",risky:"Decisión arriesgada",
+scs:[
+ {q:"Maya se siente mucho mejor al tercer día de su antibiótico de 8 días, así que deja de tomarlo.",a:1,f:"Arriesgada. Las bacterias que quedan son las más resistentes. Pueden multiplicarse, como los discos rojos, y propagarse."},
+ {q:"Luis tiene un resfriado y le pide al médico un antibiótico “por si acaso”.",a:1,f:"Arriesgada. Los resfriados los causan virus y los antibióticos no funcionan contra los virus. Los antibióticos innecesarios dan a las bacterias más oportunidades de volverse resistentes."},
+ {q:"Priya toma cada dosis de su antibiótico a la misma hora todos los días hasta terminar el frasco.",a:0,f:"Inteligente. Tomar cada dosis a tiempo mata las bacterias antes de que las sobrevivientes resistentes se apoderen."},
+ {q:"Sam se lava las manos con frecuencia y se queda en casa cuando está enfermo, para que menos personas se infecten.",a:0,f:"Inteligente. Menos infecciones significa que se necesitan menos antibióticos, así que las bacterias tienen menos oportunidades de volverse resistentes."}],
+qF:"Pregunta 6 (4 pts)",qFt:"Escribe 3–4 oraciones de consejo para un compañero sobre cómo usar los antibióticos con responsabilidad. Usa al menos dos palabras de este laboratorio (por ejemplo: resistencia, sobrevivientes, plásmido, conjugación).",
+earned:"Puntos automáticos hasta ahora",ofAuto:"de 26 pts automáticos",teacher:"Tu maestra califica las Preguntas 1–6 (28 pts). Total de la tarea: 54 pts.",
+dl:"Descargar mis respuestas",copy:"Copiar mis respuestas",copied:"¡Copiado!",dlfail:"No se pudo guardar. Usa “Copiar mis respuestas”.",
+saved:"Tu trabajo se guarda en este dispositivo mientras escribes.",
+resetAll:"Borrar todo",confirmClear:"¿Borrar todas tus respuestas en esta página?",
+mix:"Resultados de la placa de apareamiento",
+growth:"Crecimiento",nog:"Sin crecimiento",
+type:"Escribe tu respuesta aquí"
+}};
+function T(){return TXT[S.lang]||TXT.en}
+
+/* ---------------- science data ---------------- */
+// plate order: LB, LB+strep, LB+amp, LB+strep+amp.  1 = growth
+var TRUTH={I:[1,1,0,0],II:[1,0,1,0]};
+var DICE=["⚀","⚁","⚂","⚃","⚄","⚅"];
+
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]})}
+
+/* ---------------- plate drawing ---------------- */
+function dishSVG(left,right,label){
+  // left/right: 1 growth, 0 none, null = not revealed
+  function colonies(cx,grow,col){
+    if(!grow)return "";var pts=[[-18,-20],[-6,-8],[-22,4],[-10,18],[-2,-26],[-24,-8],[-14,28]],out="";
+    pts.forEach(function(p){out+="<circle cx='"+(cx+p[0]*(cx<60?1:-1))+"' cy='"+(60+p[1])+"' r='4' fill='"+col+"'/>"});return out}
+  return "<svg viewBox='0 0 120 120' width='120' height='120' role='img' aria-label='"+esc(label)+"'>"+
+    "<circle cx='60' cy='60' r='56' fill='var(--dish)' stroke='var(--line)' stroke-width='3'/>"+
+    "<line x1='60' y1='6' x2='60' y2='114' stroke='var(--muted)' stroke-width='1.5' stroke-dasharray='4 3'/>"+
+    "<text x='30' y='112' font-size='9' text-anchor='middle' fill='var(--muted)'>I</text><text x='90' y='112' font-size='9' text-anchor='middle' fill='var(--muted)'>II</text>"+
+    (left===1?colonies(36,1,"#d9b36b"):"")+(right===1?colonies(84,1,"#d9b36b"):"")+"</svg>";
+}
+function mixedSVG(label){
+  var pts=[[40,36],[56,52],[72,38],[48,70],[66,78],[82,62],[60,26],[34,60],[78,88]],out="";
+  pts.forEach(function(p){out+="<circle cx='"+p[0]+"' cy='"+p[1]+"' r='4' fill='#d9b36b'/>"});
+  return "<svg viewBox='0 0 120 120' width='120' height='120' role='img' aria-label='"+esc(label)+"'><circle cx='60' cy='60' r='56' fill='var(--dish)' stroke='var(--line)' stroke-width='3'/>"+out+"</svg>";
+}
+
+/* ---------------- simulation ---------------- */
+function newSim(mode){return {b:13,y:6,r:1,rows:[{t:0,b:13,y:6,r:1,roll:null,took:null}],log:"",mode:mode||S.mode||"random"}}
+function simTotal(s){return s.b+s.y+s.r}
+function simDone(s){return s.rows.length-1>=8||simTotal(s)===0}
+function doRoll(){
+  var s=S.sim;if(!s||simDone(s))return;
+  var roll=s.mode==="perfect"?[1,3,5,6][Math.floor(Math.random()*4)]:1+Math.floor(Math.random()*6);
+  var took=[1,3,5,6].indexOf(roll)>=0,rem=0;
+  if(took){var n=5;var d=Math.min(s.b,n);s.b-=d;n-=d;d=Math.min(s.y,n);s.y-=d;n-=d;d=Math.min(s.r,n);s.r-=d;n-=d;rem=5-n}
+  var add=0;if(s.b>0){s.b++;add++}if(s.y>0){s.y++;add++}if(s.r>0){s.r++;add++}
+  s.rows.push({t:s.rows.length,b:s.b,y:s.y,r:s.r,roll:roll,took:took});
+  var t=T();
+  s.log=DICE[roll-1]+" "+roll+" → "+(took?t.taken+": "+t.removed+" "+rem:t.forgot+": "+t.removed+" 0")+" · "+t.added+" "+add;
+  saveState();renderSim();renderScore();
+}
+function saveRun(){
+  var s=S.sim;if(!s||!simDone(s))return;
+  var last=s.rows[s.rows.length-1];
+  S.runs.push({mode:s.mode,rows:s.rows,end:[last.b,last.y,last.r,last.b+last.y+last.r]});
+  S.sim=newSim(S.mode);saveState();renderSim();renderScore();renderRuns();
+}
+
+function chartSVG(rows){
+  var W=480,H=260,L=44,R=12,Tp=14,B=44,max=25;
+  rows.forEach(function(r){max=Math.max(max,r.b+r.y+r.r)});max=Math.ceil(max/5)*5;
+  function X(i){return L+i*(W-L-R)/8}function Y(v){return H-B-v*(H-B-Tp)/max}
+  var t=T(),g="";
+  for(var v=0;v<=max;v+=5){g+="<line x1='"+L+"' x2='"+(W-R)+"' y1='"+Y(v)+"' y2='"+Y(v)+"' stroke='var(--line)'/><text x='"+(L-6)+"' y='"+(Y(v)+4)+"' font-size='11' text-anchor='end' fill='var(--muted)'>"+v+"</text>"}
+  for(var i=0;i<=8;i++){g+="<text x='"+X(i)+"' y='"+(H-B+16)+"' font-size='11' text-anchor='middle' fill='var(--muted)'>"+i+"</text>"}
+  function line(key,col,dash){
+    var p=rows.map(function(r,i){var v=key==="t"?r.b+r.y+r.r:r[key];return X(i)+","+Y(v)}).join(" ");
+    var dots=rows.map(function(r,i){var v=key==="t"?r.b+r.y+r.r:r[key];return "<circle cx='"+X(i)+"' cy='"+Y(v)+"' r='3.5' fill='"+col+"'/>"}).join("");
+    return "<polyline points='"+p+"' fill='none' stroke='"+col+"' stroke-width='2.5' "+(dash?"stroke-dasharray='6 4'":"")+"/>"+dots}
+  return "<svg viewBox='0 0 "+W+" "+H+"' width='100%' role='img' aria-label='"+esc(t.graphT)+"'>"+g+
+    "<text x='"+((L+W-R)/2)+"' y='"+(H-6)+"' font-size='12' text-anchor='middle' fill='var(--ink)'>"+esc(t.gx)+"</text>"+
+    "<text transform='translate(12 "+((H-B)/2)+") rotate(-90)' font-size='12' text-anchor='middle' fill='var(--ink)'>"+esc(t.gy)+"</text>"+
+    line("b","var(--blue)")+line("y","var(--yellow)")+line("r","var(--red)")+line("t","var(--ink)",true)+"</svg>";
+}
+function dotsHTML(n,c){var h="";for(var i=0;i<n;i++)h+="<i style='background:"+c+"'></i>";return h||"<span class='small'>0</span>"}
+
+/* ---------------- scoring ---------------- */
+function predScore(){var n=0;["I","II"].forEach(function(k){for(var i=0;i<4;i++){var v=S.pred[k+i];if(S.predChecked&&v===(TRUTH[k][i]?"1":"0"))n++}});return n}
+function mcScore(){var n=0;T().mcs.forEach(function(m,i){if(S.mc["m"+i]===String(m.a)&&S.mcChecked["m"+i])n++});return n}
+function simScore(){return (S.runs.length>=1?3:0)+(S.runs.length>=2?2:0)}
+var GROUPS=[{terms:[0,1,2],order:[1,2,0]},{terms:[3,4,5],order:[5,3,4]}];
+function matchScore(){var n=0;if(!S.matchChecked)return 0;for(var i=0;i<6;i++){if(S.match["t"+i]===String(i))n++}return n}
+function scScore(){var n=0;T().scs.forEach(function(x,i){if(S.scChecked["sc"+i]&&S.sc["sc"+i]===String(x.a))n++});return n}
+function autoTotal(){return predScore()+mcScore()+simScore()+matchScore()+scScore()}
+
+/* ---------------- render ---------------- */
+function $(id){return document.getElementById(id)}
+function render(){
+  var t=T();document.documentElement.lang=S.lang;
+  $("lEN").setAttribute("aria-pressed",S.lang==="en");$("lES").setAttribute("aria-pressed",S.lang==="es");
+  $("brand").textContent="🧫 "+t.brand;
+  $("nav").innerHTML=["p1","p2","p3","p4","p5","p6"].map(function(id,i){return "<a href='#"+id+"'>"+esc(t.nav[i])+"</a>"}).join("");
+  var h="";
+  h+="<section class='hero'><div class='disks'><i style='background:#2f6fd1'></i><i style='background:#f2b705'></i><i style='background:#d63a2f'></i></div><h1>"+esc(t.title)+"</h1><p>"+esc(t.sub)+"</p><p>"+esc(t.intro)+"</p></section>";
+  h+="<section class='card'><div class='row2'><div><label class='q' for='nm'>"+esc(t.name)+"</label><input type='text' id='nm' value='"+esc(S.name)+"'></div><div><label class='q' for='pd'>"+esc(t.period)+"</label><input type='text' id='pd' value='"+esc(S.period)+"'></div></div><p class='small'>"+esc(t.saved)+"</p></section>";
+
+  // PART 1
+  h+="<section class='card' id='p1'><div class='partno'>1.2.3</div><h2>"+esc(t.p1h)+"<span class='pill'>"+esc(t.p1pts)+"</span></h2><p>"+esc(t.p1intro)+"</p>";
+  h+="<div class='scroll'><table><tr><th></th><th>"+esc(t.colI)+"</th><th>"+esc(t.colII)+"</th></tr>";
+  t.plates.forEach(function(pl,i){
+    h+="<tr><td style='text-align:left'><b>"+esc(pl)+"</b></td>";
+    ["I","II"].forEach(function(k){
+      var v=S.pred[k+i]||"",mark="";
+      if(S.predChecked&&v!==""){mark=(v===(TRUTH[k][i]?"1":"0"))?" <span class='ok'>✓</span>":" <span class='bad'>✗</span>"}
+      h+="<td><select data-pred='"+k+i+"' aria-label='"+esc(pl+" "+(k==="I"?t.colI:t.colII))+"'><option value=''>"+esc(t.sel[0])+"</option><option value='1'"+(v==="1"?" selected":"")+">"+esc(t.sel[1])+"</option><option value='0'"+(v==="0"?" selected":"")+">"+esc(t.sel[2])+"</option></select>"+mark+"</td>"});
+    h+="</tr>"});
+  h+="</table></div><p><button class='btn' id='chkP'>"+esc(t.check)+"</button> "+(S.predChecked?"<b>"+esc(t.pcore)+": "+predScore()+" / 8</b>":"")+"</p>";
+  if(S.predChecked){
+    h+="<div class='plates'>";
+    t.plates.forEach(function(pl,i){h+="<div class='plate'>"+dishSVG(TRUTH.I[i],TRUTH.II[i],pl)+"<div>"+esc(pl)+"</div></div>"});
+    h+="</div><p><button class='btn alt' id='mateB'>"+esc(t.reveal)+"</button></p>";
+  }
+  if(S.predChecked&&S.mated){
+    h+="<div class='info'><h3>"+esc(t.matedH)+"</h3><p>"+esc(t.matedP)+"</p><div class='plates'>";
+    [[1,"LB + "+(S.lang==="es"?"estreptomicina":"streptomycin")],[2,"LB + "+(S.lang==="es"?"ampicilina":"ampicillin")],[3,t.plates[3]]].forEach(function(p){h+="<div class='plate'>"+mixedSVG(p[1])+"<div>"+esc(p[1])+"</div><div class='ok'>"+esc(t.growth)+"</div></div>"});
+    h+="</div><p><b>"+esc(t.matedNote)+"</b></p></div>";
+  }
+  h+=qBox("q1",t.qA,t.qAt)+qBox("q2",t.qB,t.qBt)+"</section>";
+
+  // PART 2
+  h+="<section class='card' id='p2'><div class='partno'>1.2.4</div><h2>"+esc(t.p2h)+"<span class='pill'>"+esc(t.p2pts)+"</span></h2><p>"+esc(t.p2intro)+"</p><ol>"+t.rules.map(function(r){return "<li>"+esc(r)+"</li>"}).join("")+"</ol>";
+  h+="<div id='simBox'></div><div id='runsBox'></div>";
+  h+=qBox("q3",t.qC,t.qCt)+qBox("q4",t.qD,t.qDt)+"</section>";
+
+  // PART 3
+  h+="<section class='card' id='p3'><div class='partno'>1.2.3 + 1.2.4</div><h2>"+esc(t.p3h)+"<span class='pill'>"+esc(t.p3pts)+"</span></h2>";
+  t.mcs.forEach(function(m,i){
+    var key="m"+i,sel=S.mc[key],chk=S.mcChecked&&S.mcChecked[key];
+    h+="<div class='mc'><label class='q'>"+(i+1)+". "+esc(m.q)+"</label>";
+    m.o.forEach(function(o,j){
+      var cls="";if(chk){if(j===m.a)cls="right";else if(String(j)===sel)cls="wrong"}
+      h+="<label class='"+cls+"'><input type='radio' name='"+key+"' value='"+j+"' "+(sel===String(j)?"checked":"")+(chk?" disabled":"")+"> "+esc(o)+"</label>"});
+    h+="</div>"});
+  h+="</section>";
+
+  // PART 4
+  h+="<section class='card' id='p4'><div class='partno'>1.2.3 + 1.2.4</div><h2>"+esc(t.p4h)+"<span class='pill'>"+esc(t.p4pts)+"</span></h2>"+qBox("q5",t.qE,t.qEt)+"</section>";
+
+  h+=part56(t);
+  h+="<section class='card'><p>"+esc(t.teacher)+"</p><p><button class='btn' id='dlB'>"+esc(t.dl)+"</button> <button class='btn alt' id='cpB'>"+esc(t.copy)+"</button> <button class='btn alt' id='clrB'>"+esc(t.resetAll)+"</button></p><p class='small' id='dlMsg'></p></section>";
+  $("app").innerHTML=h;
+  if(!S.sim)S.sim=newSim(S.mode);
+  renderSim();renderRuns();renderScore();bind();
+}
+function part56(t){
+  var h="<section class='card' id='p5'><div class='partno'>1.2.3</div><h2>"+esc(t.p5h)+"<span class='pill'>"+esc(t.p5pts)+"</span></h2><p>"+esc(t.p5intro)+"</p>";
+  GROUPS.forEach(function(g,gi){
+    h+="<h3>"+esc(gi?t.g2:t.g1)+"</h3>";
+    g.terms.forEach(function(ti){
+      var k="t"+ti,v=S.match[k]||"",mark="";
+      if(S.matchChecked&&v!=="")mark=(v===String(ti))?" <span class='ok'>✓</span>":" <span class='bad'>✗</span>";
+      h+="<label class='q' for='m_"+k+"'>"+esc(t.mterms[ti])+mark+"</label><select id='m_"+k+"' data-match='"+k+"'><option value=''>"+esc(t.sel[0])+"</option>";
+      g.order.forEach(function(di){h+="<option value='"+di+"'"+(v===String(di)?" selected":"")+">"+esc(t.mdefs[di])+"</option>"});
+      h+="</select>"});
+  });
+  h+="<p><button class='btn' id='chkM'>"+esc(t.checkM)+"</button> "+(S.matchChecked?"<b>"+esc(t.mcorrect)+": "+matchScore()+" / 6</b>":"")+"</p></section>";
+  h+="<section class='card' id='p6'><div class='partno'>1.2.4</div><h2>"+esc(t.p6h)+"<span class='pill'>"+esc(t.p6pts)+"</span></h2><p>"+esc(t.p6intro)+"</p>";
+  t.scs.forEach(function(x,i){
+    var key="sc"+i,sel=S.sc[key],chk=S.scChecked[key];
+    h+="<div class='mc'><label class='q'>"+(i+1)+". "+esc(x.q)+"</label>";
+    [t.smart,t.risky].forEach(function(o,j){
+      var cls="";if(chk){if(j===x.a)cls="right";else if(String(j)===sel)cls="wrong"}
+      h+="<label class='"+cls+"'><input type='radio' name='"+key+"' value='"+j+"' "+(sel===String(j)?"checked":"")+(chk?" disabled":"")+"> "+esc(o)+"</label>"});
+    if(chk)h+="<div class='info'>"+esc(x.f)+"</div>";
+    h+="</div>"});
+  h+=qBox("q6",t.qF,t.qFt)+"</section>";
+  return h;
+}
+function qBox(id,label,text){
+  return "<label class='q' for='"+id+"'>"+esc(label)+"<br><span style='font-weight:400'>"+esc(text)+"</span></label><textarea id='"+id+"' data-q='"+id+"' placeholder='"+esc(T().type)+"'>"+esc(S.q[id]||"")+"</textarea>";
+}
+function renderSim(){
+  var box=$("simBox");if(!box)return;var t=T(),s=S.sim,done=simDone(s),last=s.rows[s.rows.length-1];
+  var h="<div class='info'><label><input type='radio' name='mode' value='random' "+(s.mode==="random"?"checked":"")+(s.rows.length>1?" disabled":"")+"> "+esc(t.mode1)+"</label> &nbsp; <label><input type='radio' name='mode' value='perfect' "+(s.mode==="perfect"?"checked":"")+(s.rows.length>1?" disabled":"")+"> "+esc(t.mode2)+"</label></div>";
+  h+="<div class='simrow'><div>";
+  h+="<div class='legend'><span style='--c:var(--blue)'>"+esc(t.blue)+": "+last.b+"</span><span style='--c:var(--yellow)'>"+esc(t.yellow)+": "+last.y+"</span><span style='--c:var(--red)'>"+esc(t.red)+": "+last.r+"</span></div>";
+  h+="<div class='dots'>"+dotsHTML(last.b,"var(--blue)")+dotsHTML(last.y,"var(--yellow)")+dotsHTML(last.r,"var(--red)")+"</div>";
+  h+="<p><button class='btn' id='rollB' "+(done?"disabled":"")+">"+esc(t.roll)+"</button> <span class='dice' aria-hidden='true'>"+(last.roll?DICE[last.roll-1]:"🎲")+"</span></p>";
+  h+="<div class='log' aria-live='polite'>"+esc(s.log||"")+(done?"<br><b>"+esc(t.runDone)+"</b>":"")+"</div>";
+  h+="<p><button class='btn alt' id='saveRunB' "+(done?"":"disabled")+">"+esc(t.newrun)+"</button> <button class='btn alt' id='resetB'>"+esc(t.reset)+"</button></p>";
+  h+="</div><div>"+chartSVG(s.rows)+"<div class='legend'><span style='--c:var(--blue)'>"+esc(t.blue)+"</span><span style='--c:var(--yellow)'>"+esc(t.yellow)+"</span><span style='--c:var(--red)'>"+esc(t.red)+"</span><span style='--c:var(--ink)'>"+esc(t.total)+"</span></div></div></div>";
+  h+="<div class='scroll'><table><tr><th>"+esc(t.tossN)+"</th><th>🎲</th><th>"+esc(t.blue)+"</th><th>"+esc(t.yellow)+"</th><th>"+esc(t.red)+"</th><th>"+esc(t.total)+"</th></tr>";
+  s.rows.forEach(function(r,i){h+="<tr><td>"+(i===0?esc(t.initial):i)+"</td><td>"+(r.roll?r.roll:"–")+"</td><td>"+r.b+"</td><td>"+r.y+"</td><td>"+r.r+"</td><td>"+(r.b+r.y+r.r)+"</td></tr>"});
+  h+="</table></div>";
+  box.innerHTML=h;
+  var rb=$("rollB");if(rb)rb.onclick=doRoll;
+  var sb=$("saveRunB");if(sb)sb.onclick=saveRun;
+  var rs=$("resetB");if(rs)rs.onclick=function(){S.sim=newSim(S.mode);saveState();renderSim()};
+  Array.prototype.forEach.call(box.querySelectorAll("input[name=mode]"),function(el){el.onchange=function(){S.mode=el.value;S.sim=newSim(S.mode);saveState();renderSim()}});
+}
+function renderRuns(){
+  var box=$("runsBox");if(!box)return;var t=T();
+  if(!S.runs.length){box.innerHTML="";return}
+  var h="<div class='info'><h3>"+esc(t.runs)+"</h3><div class='scroll'><table><tr><th>#</th><th></th><th>"+esc(t.runEnd)+"</th></tr>";
+  S.runs.forEach(function(r,i){h+="<tr><td>"+(i+1)+"</td><td>"+esc(t.runMode[r.mode==="perfect"?1:0])+"</td><td>"+r.end.join(" / ")+"</td></tr>"});
+  h+="</table></div></div>";box.innerHTML=h;
+}
+function renderScore(){
+  var t=T();
+  $("scorebar").innerHTML="<span><b>"+esc(t.earned)+": "+autoTotal()+"</b> "+esc(t.ofAuto)+"</span><span class='small'>"+esc(t.simpts)+": "+simScore()+" / 5</span>";
+}
+
+/* ---------------- events ---------------- */
+function bind(){
+  $("nm").oninput=function(e){S.name=e.target.value;saveState()};
+  $("pd").oninput=function(e){S.period=e.target.value;saveState()};
+  Array.prototype.forEach.call(document.querySelectorAll("textarea[data-q]"),function(el){el.oninput=function(){S.q[el.dataset.q]=el.value;saveState()}});
+  Array.prototype.forEach.call(document.querySelectorAll("select[data-pred]"),function(el){el.onchange=function(){S.pred[el.dataset.pred]=el.value;S.predChecked=false;saveState();render()}});
+  var c=$("chkP");if(c)c.onclick=function(){S.predChecked=true;saveState();render();location.hash="#p1"};
+  var m=$("mateB");if(m)m.onclick=function(){S.mated=true;saveState();render()};
+  S.mcChecked=S.mcChecked||{};
+  Array.prototype.forEach.call(document.querySelectorAll(".mc input[type=radio]"),function(el){el.onchange=function(){S.mc[el.name]=el.value;S.mcChecked[el.name]=true;saveState();render()}});
+ Array.prototype.forEach.call(document.querySelectorAll("select[data-match]"),function(el){el.onchange=function(){S.match[el.dataset.match]=el.value;S.matchChecked=false;saveState();render()}});
+  var cm=$("chkM");if(cm)cm.onclick=function(){S.matchChecked=true;saveState();render();location.hash="#p5"};
+  Array.prototype.forEach.call(document.querySelectorAll("input[name^=sc]"),function(el){el.onchange=function(){S.sc[el.name]=el.value;S.scChecked[el.name]=true;saveState();render()}});
+  $("dlB").onclick=doDownload;$("cpB").onclick=doCopy;
+  $("clrB").onclick=function(){if(confirm(T().confirmClear)){S={lang:S.lang,name:"",period:"",pred:{},predChecked:false,mated:false,q:{},mc:{},mcChecked:{},match:{},matchChecked:false,sc:{},scChecked:{},sim:null,runs:[],mode:"random"};saveState();render()}};
+}
+$("lEN").onclick=function(){S.lang="en";saveState();render()};
+$("lES").onclick=function(){S.lang="es";saveState();render()};
+
+/* ---------------- export ---------------- */
+function report(){
+  var t=T(),L=[];
+  L.push(t.title);L.push(t.name+": "+S.name+"   "+t.period+": "+S.period);L.push("");
+  L.push("PART 1 — "+t.pcore+": "+predScore()+" / 8");
+  ["I","II"].forEach(function(k){t.plates.forEach(function(pl,i){var v=S.pred[k+i];L.push("  "+(k==="I"?t.colI:t.colII)+" | "+pl+": "+(v===""||v==null?"—":(v==="1"?t.sel[1]:t.sel[2])))})});
+  L.push("");L.push(t.qA+": "+t.qAt);L.push(S.q.q1||"");L.push("");L.push(t.qB+": "+t.qBt);L.push(S.q.q2||"");L.push("");
+  L.push("PART 2 — "+t.runs);
+  S.runs.forEach(function(r,i){L.push("  Run "+(i+1)+" ("+t.runMode[r.mode==="perfect"?1:0]+"): "+r.end.join(" / "));r.rows.forEach(function(x,j){L.push("    "+j+": "+x.b+" / "+x.y+" / "+x.r+" = "+(x.b+x.y+x.r))})});
+  L.push("");L.push(t.qC+": "+t.qCt);L.push(S.q.q3||"");L.push("");L.push(t.qD+": "+t.qDt);L.push(S.q.q4||"");L.push("");
+  L.push("PART 3");t.mcs.forEach(function(m,i){var v=S.mc["m"+i];L.push("  "+(i+1)+". "+(v==null?"—":m.o[+v])+(v!=null?(+v===m.a?" ✓":" ✗"):""))});
+  L.push("");L.push("PART 4");L.push(t.qE+": "+t.qEt);L.push(S.q.q5||"");L.push("");
+  L.push("");L.push("PART 5 — "+t.mcorrect+": "+matchScore()+" / 6");
+  t.mterms.forEach(function(m,i){var v=S.match["t"+i];L.push("  "+m+" → "+(v===""||v==null?"—":t.mdefs[+v])+(S.matchChecked&&v!==""&&v!=null?(v===String(i)?" ✓":" ✗"):""))});
+  L.push("");L.push("PART 6");t.scs.forEach(function(x,i){var v=S.sc["sc"+i];L.push("  "+(i+1)+". "+x.q+" → "+(v==null?"—":(+v?t.risky:t.smart)))});
+  L.push(t.qF+": "+t.qFt);L.push(S.q.q6||"");L.push("");
+  L.push(t.earned+": "+autoTotal()+" "+t.ofAuto);
+  return L.join("\n");
+}
+function doDownload(){
+  var msg=$("dlMsg");
+  var fnm="Superbug_Lab_"+(S.name||"student").replace(/[^A-Za-z0-9_-]+/g,"_")+".txt";
+  if(!(window.claude&&claude.use)){
+    try{var bl=new Blob([report()],{type:"text/plain"}),a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download=fnm;document.body.appendChild(a);a.click();document.body.removeChild(a);msg.textContent=""}catch(e){msg.textContent=T().dlfail}
+    return}
+  claude.use("downloads").then(function(d){
+    if(!d){msg.textContent=T().dlfail;return}
+    var fn="Superbug_Lab_"+(S.name||"student").replace(/[^A-Za-z0-9_-]+/g,"_")+".txt";
+    return d.save({filename:fn,data:report()}).then(function(){msg.textContent=""},function(){msg.textContent=T().dlfail});
+  }).catch(function(){msg.textContent=T().dlfail});
+}
+function doCopy(){
+  var msg=$("dlMsg"),txt=report();
+  function fallback(){var ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");msg.textContent=T().copied}catch(e){msg.textContent=T().dlfail}document.body.removeChild(ta)}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){msg.textContent=T().copied},fallback)}else fallback();
+}
+
+render();
+</script>
+</body>
+</html>
